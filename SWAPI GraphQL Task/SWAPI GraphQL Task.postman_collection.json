@@ -1,0 +1,282 @@
+{
+	"info": {
+		"_postman_id": "058b1cce-7805-4c98-addc-e654a4b07655",
+		"name": "SWAPI GraphQL Task",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Retrieve and store all species that have participated in the first movie of  Star Wars “A New Hope\".",
+			"item": [
+				{
+					"name": "Get First Episode's species (1st approach)",
+					"item": [
+						{
+							"name": "Get First Episode's species",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "graphql",
+									"graphql": {
+										"query": "query findFilmSpecies ($first: Int){\n    allFilms(first: $first){\n        films{\n            id\n            title\n            speciesConnection{\n                species{\n                    name\n                }\n            }\n        }\n    }\n}",
+										"variables": "{\n    \"first\": 1\n}"
+									}
+								},
+								"url": {
+									"raw": "{{URL}}",
+									"host": [
+										"{{URL}}"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Get Episode's ID -> Get Species (2nd approach)",
+					"item": [
+						{
+							"name": "Get all films IDs+Titles and set variable",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = JSON.parse(responseBody);",
+											"jsonData.data.allFilms.films.forEach(element => {",
+											"    if (element.title === \"A New Hope\") {",
+											"        pm.environment.set(\"Film_ID\", element.id)",
+											"    };",
+											"    }",
+											")",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "graphql",
+									"graphql": {
+										"query": "{\n    allFilms{\n        films{\n            id\n            title\n        }\n    }\n}",
+										"variables": ""
+									}
+								},
+								"url": {
+									"raw": "{{URL}}",
+									"host": [
+										"{{URL}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Species for Film",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "graphql",
+									"graphql": {
+										"query": "query($id: ID){\n    film(id: $id){\n        speciesConnection{\n            species{\n                name\n            }\n        }\n    }\n}",
+										"variables": "{\n    \"id\": \"{{Film_ID}}\"\n}"
+									}
+								},
+								"url": {
+									"raw": "{{URL}}",
+									"host": [
+										"{{URL}}"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Obtain “name”, “birthYear”, “homeWorld”, “eyeColor” for the person, which is “Droid”",
+			"item": [
+				{
+					"name": "Get all species IDs+Names and set variable",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"jsonData.data.allSpecies.species.forEach(element => {",
+									"    if (element.name === \"Droid\") {",
+									"        pm.environment.set(\"Droid_specie_ID\", element.id)",
+									"    }",
+									"})"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "{\n  allSpecies{\n    species{\n      id\n      name\n    }\n  }\n}",
+								"variables": ""
+							}
+						},
+						"url": {
+							"raw": "{{URL}}",
+							"host": [
+								"{{URL}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get required values for Droids",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query($id: ID){\n  species(id: $id){\n    name\n    personConnection{\n      people{\n        name\n        birthYear\n        eyeColor\n        homeworld {\n          name\n        }\n      }\n    }\n  }\n}\n\n",
+								"variables": "{\n    \"id\":\"{{Droid_specie_ID}}\"\n}"
+							}
+						},
+						"url": {
+							"raw": "{{URL}}",
+							"host": [
+								"{{URL}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Obtain the totalCount of all people that have participated in the movie and the unique “id”, “name” and “gender” for each of them.",
+			"item": [
+				{
+					"name": "Get TotalCount + Values for each ppl",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "{\n  film(id:\"{{Film_ID}}\"){\n    title\n    characterConnection{\n      totalCount\n      characters{\n        id\n        name\n        gender\n      }\n    }\n  }\n}",
+								"variables": ""
+							}
+						},
+						"url": {
+							"raw": "{{URL}}",
+							"host": [
+								"{{URL}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Using the information received by previous request, obtain the “name”, “birthyear”, “homeWorld”, “eyeColor”, starshipName for the person with unique id = 4.",
+			"item": [
+				{
+					"name": "Get Person Info using fragment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "{\n  person(personID: 4) {\n    name\n    birthYear\n    homeworld {\n      name\n    }\n    eyeColor\n    ...starShip\n  }\n}\n\nfragment starShip on Person {\n  starshipConnection {\n    starships {\n      name\n    }\n  }\n}\n",
+								"variables": ""
+							}
+						},
+						"url": {
+							"raw": "{{URL}}",
+							"host": [
+								"{{URL}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
